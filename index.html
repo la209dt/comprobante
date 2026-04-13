@@ -162,7 +162,7 @@ doc.line(15, 30, 195, 30);
     try { doc.addImage(logo2, "PNG", 55, 2, 20, 20); } catch {}
 
     // Encabezado
-    doc.setFontSize(16);
+    doc.setFontSize(14);
 doc.setTextColor(0, 102, 204);
 doc.text("COMPROBANTE DE PAGO", 70, 12);
 
@@ -174,11 +174,14 @@ doc.setTextColor(0, 0, 0);
     doc.text("Nº: " + numero, 160, 10);
 
     let margenX = 15;
+let cajaY = 32;
 
-doc.text("Fecha: " + fecha, margenX, 38);
-doc.text("Datos: " + datos, margenX, 48);
+// Caja
+doc.rect(margenX, cajaY, 180, 20);
 
-doc.rect(margenX, 32, 180, 22);
+// Textos (centrados dentro de la caja)
+doc.text("Fecha: " + fecha, margenX + 2, cajaY + 7);
+doc.text("Datos: " + datos, margenX + 2, cajaY + 15);
 
     let y = 55;
 
