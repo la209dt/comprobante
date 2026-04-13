@@ -14,9 +14,13 @@ body {
     padding: 20px;
 }
 
-h1, h2 { text-align: center; }
+input, textarea, select {
+    margin: 5px;
+    padding: 5px;
+    width: 100%;
+}
 
-input { margin: 5px; padding: 5px; }
+textarea { height: 80px; }
 
 table {
     width: 100%;
@@ -35,9 +39,7 @@ td, th {
     justify-content: space-between;
 }
 
-.logo {
-    height: 80px;
-}
+.logo { height: 80px; }
 
 iframe {
     width: 100%;
@@ -57,14 +59,16 @@ iframe {
     </div>
 </div>
 
-<p id="fechaTexto"></p>
+Fecha: <input type="date" id="fecha">
 
-Nombre: <input id="nombre"><br>
-DNI: <input id="dni"><br>
-Licencia: <input id="licencia"><br>
+<h3>Datos del Alumno</h3>
+<textarea id="datos" placeholder="Pegá los datos completos acá"></textarea>
 
 <h3>Método de pago</h3>
-<input id="metodo" placeholder="Transferencia">
+<select id="metodo">
+    <option>Transferencia</option>
+    <option>Efectivo</option>
+</select>
 
 <table id="tabla">
 <tr><th>Descripción</th><th>Monto</th></tr>
@@ -81,14 +85,9 @@ Licencia: <input id="licencia"><br>
 
 <script>
 
-function fechaLarga() {
-    let f = new Date();
-    let opciones = { day: 'numeric', month: 'long', year: 'numeric' };
-    return "San Carlos Bariloche, " + f.toLocaleDateString('es-AR', opciones);
-}
-
 window.onload = () => {
-    document.getElementById("fechaTexto").innerText = fechaLarga();
+    let hoy = new Date().toISOString().split("T")[0];
+    document.getElementById("fecha").value = hoy;
 
     let num = localStorage.getItem("num") || 1;
     document.getElementById("numero").innerText = "#" + String(num).padStart(5, "0");
@@ -110,29 +109,50 @@ function calcularTotal() {
     document.getElementById("total").innerText = total;
 }
 
+// 🧠 Separar datos automáticamente
+function parsearDatos(texto) {
+    let partes = texto.split(" ");
+
+    let licencia = partes.slice(0, 3).join(" ");
+    let fecha1 = partes[3];
+    let fecha2 = partes[4];
+    let nombre = partes[5] + " " + partes[6];
+    let dni = partes[partes.length - 1];
+
+    return { licencia, fecha1, fecha2, nombre, dni };
+}
+
+function fechaFormateada(fechaInput) {
+    let f = new Date(fechaInput);
+    let opciones = { day: 'numeric', month: 'long', year: 'numeric' };
+    return "San Carlos Bariloche, " + f.toLocaleDateString('es-AR', opciones);
+}
+
 async function crearPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    let nombre = document.getElementById("nombre").value;
-    let dni = document.getElementById("dni").value;
-    let licencia = document.getElementById("licencia").value;
+    let fecha = document.getElementById("fecha").value;
     let metodo = document.getElementById("metodo").value;
     let total = document.getElementById("total").innerText;
     let numero = document.getElementById("numero").innerText;
 
-    doc.text("COMPROBANTE DE PAGO", 70, 10);
+    let datosTexto = document.getElementById("datos").value;
+    let datos = parsearDatos(datosTexto);
+
+    doc.text("COMPROBANTE DE PAGO", 60, 10);
     doc.text("Nº " + numero, 150, 10);
 
-    doc.text(fechaLarga(), 10, 20);
+    doc.text(fechaFormateada(fecha), 10, 20);
 
-    doc.text("Nombre: " + nombre, 10, 30);
-    doc.text("DNI: " + dni, 10, 40);
-    doc.text("Licencia: " + licencia, 10, 50);
+    doc.text("Licencia: " + datos.licencia, 10, 30);
+    doc.text("Alumno: " + datos.nombre, 10, 40);
+    doc.text("DNI: " + datos.dni, 10, 50);
+    doc.text("Período: " + datos.fecha1 + " al " + datos.fecha2, 10, 60);
 
-    doc.text("Método de pago: " + metodo, 10, 60);
+    doc.text("Método de pago: " + metodo, 10, 70);
 
-    let y = 70;
+    let y = 80;
 
     document.querySelectorAll("#tabla tr").forEach((fila, i) => {
         if(i === 0) return;
@@ -145,11 +165,24 @@ async function crearPDF() {
 
     doc.text("Total: $" + total, 10, y + 10);
 
-    doc.text("Firma: Cristian Baldrich", 10, y + 30);
+    let firma = await cargarImagen("firma.png");
+    let sello = await cargarImagen("sello.png");
 
-    doc.text("GRACIAS POR SU PREFERENCIA", 50, y + 50);
+    doc.addImage(firma, "PNG", 10, y + 20, 50, 20);
+    doc.addImage(sello, "PNG", 140, y + 20, 40, 40);
+
+    doc.text("TÉRMINOS Y CONDICIONES", 10, y + 70);
+    doc.text("Este comprobante no sustituye la factura física.", 10, y + 80);
 
     return doc;
+}
+
+function cargarImagen(src) {
+    return new Promise(resolve => {
+        let img = new Image();
+        img.src = src;
+        img.onload = () => resolve(img);
+    });
 }
 
 async function previewPDF() {
