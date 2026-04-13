@@ -162,7 +162,12 @@ doc.line(10, 30, 200, 30);
     try { doc.addImage(logo2, "PNG", 55, 2, 20, 20); } catch {}
 
     // Encabezado
-    doc.text("COMPROBANTE DE PAGO", 80, 10);
+    doc.setFontSize(16);
+doc.setTextColor(0, 102, 204);
+doc.text("COMPROBANTE DE PAGO", 70, 12);
+
+doc.setFontSize(10);
+doc.setTextColor(0, 0, 0);
     doc.text("ESCUELA DE TÉCNICOS", 80, 18);
     doc.text("Bariloche, ATFA 209", 80, 25);
 
