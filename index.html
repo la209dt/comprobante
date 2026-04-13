@@ -2,24 +2,48 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Boleta Electrónica</title>
+<title>Comprobante</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body { font-family: Arial; padding: 20px; }
-input { margin: 5px; }
-table { margin-top: 10px; border-collapse: collapse; width: 100%; }
-td, th { border: 1px solid black; padding: 5px; }
-iframe { margin-top: 20px; width: 100%; height: 400px; }
+body { font-family: Arial; padding: 20px; max-width: 800px; margin: auto; }
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+input { margin: 5px; padding: 5px; }
+
+table {
+    margin-top: 10px;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td, th {
+    border: 1px solid black;
+    padding: 5px;
+}
+
+iframe {
+    margin-top: 20px;
+    width: 100%;
+    height: 400px;
+}
 </style>
 </head>
 
 <body>
 
-<h2>Comprobante</h2>
+<div class="header">
+    <h2>COMPROBANTE</h2>
+    Nº <input id="numero" style="width:100px;">
+</div>
 
-Nombre: <input id="nombre"><br>
+Datos: <input id="nombre"><br>
 Fecha: <input type="date" id="fecha"><br>
 
 <table id="tabla">
@@ -37,27 +61,41 @@ Fecha: <input type="date" id="fecha"><br>
 
 <script>
 
-// Fecha automática
+// 🔢 Número automático editable
 window.onload = function() {
+
     let hoy = new Date().toISOString().split("T")[0];
     document.getElementById("fecha").value = hoy;
+
+    let num = localStorage.getItem("num") || 1;
+    document.getElementById("numero").value = String(num).padStart(5,"0");
+
+    // recuperar items guardados
+    let items = JSON.parse(localStorage.getItem("items") || "[]");
+
+    items.forEach(item => agregarItem(item.concepto, item.monto));
 };
 
-function agregarItem() {
+function agregarItem(concepto = "", monto = "") {
     let tabla = document.getElementById("tabla");
     let row = tabla.insertRow();
 
     row.innerHTML = `
-        <td><input></td>
-        <td><input type="number" oninput="calcularTotal()"></td>
+        <td><input value="${concepto}"></td>
+        <td><input type="number" value="${monto}" oninput="calcularTotal()"></td>
     `;
 }
 
 function calcularTotal() {
     let total = 0;
-    document.querySelectorAll('input[type="number"]').forEach(i => {
-        total += Number(i.value) || 0;
+
+    document.querySelectorAll('#tabla tr').forEach((fila, i) => {
+        if(i === 0) return;
+
+        let monto = fila.cells[1].querySelector("input").value;
+        total += Number(monto) || 0;
     });
+
     document.getElementById("total").innerText = total;
 }
 
@@ -68,28 +106,39 @@ function crearPDF() {
     let nombre = document.getElementById("nombre").value;
     let fecha = document.getElementById("fecha").value;
     let total = document.getElementById("total").innerText;
+    let numero = document.getElementById("numero").value;
 
     doc.text("COMPROBANTE", 70, 10);
-    doc.text("Nombre: " + nombre, 10, 20);
-    doc.text("Fecha: " + fecha, 10, 30);
+    doc.text("Nº: " + numero, 150, 10);
+
+    doc.text("Fecha: " + fecha, 10, 20);
+    doc.text("Datos: " + nombre, 10, 30);
 
     let y = 40;
 
+    let items = [];
+
     document.querySelectorAll("#tabla tr").forEach((fila, i) => {
         if(i === 0) return;
+
         let concepto = fila.cells[0].querySelector("input").value;
         let monto = fila.cells[1].querySelector("input").value;
+
+        items.push({concepto, monto});
 
         doc.text(concepto + " - $" + monto, 10, y);
         y += 10;
     });
+
+    // guardar para próxima boleta
+    localStorage.setItem("items", JSON.stringify(items));
 
     doc.text("Total: $" + total, 10, y + 10);
 
     return doc;
 }
 
-// 👁 Vista previa FUNCIONANDO
+// 👁 Vista previa
 function verPDF() {
     let doc = crearPDF();
     let blob = doc.output("blob");
@@ -101,6 +150,9 @@ function verPDF() {
 function descargarPDF() {
     let doc = crearPDF();
     doc.save("comprobante.pdf");
+
+    let num = Number(localStorage.getItem("num") || 1);
+    localStorage.setItem("num", num + 1);
 }
 
 </script>
