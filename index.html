@@ -94,7 +94,7 @@ Fecha: <input type="date" id="fecha"><br>
 
 <script>
 
-// Inicio limpio
+// ===================== INICIO =====================
 window.onload = function() {
 
     let hoy = new Date().toISOString().split("T")[0];
@@ -104,9 +104,10 @@ window.onload = function() {
     document.getElementById("numero").value = String(num).padStart(5,"0");
 
     agregarItem();
+    calcularTotal();
 };
 
-// Agregar ítem
+// ===================== AGREGAR ITEM =====================
 function agregarItem(concepto = "", monto = "") {
     let row = document.getElementById("tabla").insertRow();
 
@@ -117,125 +118,113 @@ function agregarItem(concepto = "", monto = "") {
     `;
 }
 
-// Eliminar ítem
+// ===================== ELIMINAR =====================
 function eliminarItem(btn) {
     btn.parentNode.parentNode.remove();
     calcularTotal();
 }
 
-// Total
+// ===================== TOTAL REAL =====================
 function calcularTotal() {
     let total = 0;
 
-   // Encabezado
-doc.setFontSize(11);
-doc.text("DESCRIPCIÓN", 15, y);
-doc.text("MONTO", 160, y);
+    document.querySelectorAll("#tabla tr").forEach((fila, i) => {
+        if (i === 0) return;
 
-let tablaInicioY = y;
-y += 5;
-doc.line(15, y, 195, y);
+        let monto = fila.cells[1].querySelector("input").value;
+        total += Number(monto) || 0;
+    });
 
-y += 5;
-
-// Items
-document.querySelectorAll("#tabla tr").forEach((fila, i) => {
-    if(i === 0) return;
-
-    let concepto = fila.cells[0].querySelector("input").value;
-    let monto = fila.cells[1].querySelector("input").value;
-
-    doc.text(concepto, 15, y);
-    doc.text("$" + monto, 160, y);
-
-    y += 8;
-});
-// Caja de la tabla
-doc.rect(15, tablaInicioY - 5, 180, y - tablaInicioY + 5);
-
-    document.getElementById("total").innerText = total;
+    document.getElementById("total").innerText = total.toFixed(2);
 }
 
-// Crear PDF (estable + imágenes)
+// ===================== CREAR PDF =====================
 function crearPDF() {
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    // Color institucional (azul)
-doc.setDrawColor(0, 102, 204);
-doc.setLineWidth(1);
-
-doc.line(15, 28, 195, 28);
 
     let datos = document.getElementById("datos").value;
     let fechaInput = document.getElementById("fecha").value;
-let partes = fechaInput.split("-");
+    let partes = fechaInput.split("-");
+    let fecha = partes[2] + "/" + partes[1] + "/" + partes[0];
 
-let fecha = partes[2] + "/" + partes[1] + "/" + partes[0];
     let total = document.getElementById("total").innerText;
     let numero = document.getElementById("numero").value;
 
-    // Logos
+    // ================= LOGOS =================
     let logo1 = document.querySelector('img[src="logo-atfa.png"]');
     let logo2 = document.querySelector('img[src="logo_bariloche.png"]');
 
     try { doc.addImage(logo1, "PNG", 10, 5, 40, 25); } catch {}
     try { doc.addImage(logo2, "PNG", 55, 2, 20, 20); } catch {}
 
-    // Encabezado
+    // ================= ENCABEZADO =================
     doc.setFontSize(14);
-doc.setTextColor(0, 0, 0);
+    doc.text("COMPROBANTE DE PAGO", 80, 12);
+    doc.text("ESCUELA DE TÉCNICOS", 80, 18);
+    doc.text("Bariloche, ATFA 209", 80, 24);
 
-doc.text("COMPROBANTE DE PAGO", 80, 12);
-doc.text("ESCUELA DE TÉCNICOS", 80, 18);
-doc.text("Bariloche, ATFA 209", 80, 24);
-
-doc.setFontSize(10);
-doc.setTextColor(0, 0, 0);
-
+    doc.setFontSize(10);
     doc.text("Nº: " + numero, 160, 10);
 
     let margenX = 15;
-let cajaY = 32;
+    let cajaY = 32;
 
-// Caja
-doc.rect(margenX, cajaY, 180, 20);
+    doc.rect(margenX, cajaY, 180, 20);
+    doc.text("Fecha: " + fecha, margenX + 2, cajaY + 7);
+    doc.text("Datos: " + datos, margenX + 2, cajaY + 15);
 
-// Texto dentro
-doc.text("Fecha: " + fecha, margenX + 2, cajaY + 7);
-doc.text("Datos: " + datos, margenX + 2, cajaY + 15);
+    // ================= TABLA =================
+    let y = cajaY + 35;
 
-    let y = cajaY + 30;
+    doc.setFontSize(11);
+    doc.setFont(undefined, "bold");
+
+    doc.text("Concepto", 15, y);
+    doc.text("Monto", 160, y);
+
+    doc.setFont(undefined, "normal");
+    y += 8;
+
+    let totalPDF = 0;
 
     document.querySelectorAll("#tabla tr").forEach((fila, i) => {
-        if(i === 0) return;
+        if (i === 0) return;
 
         let concepto = fila.cells[0].querySelector("input").value;
-        let monto = fila.cells[1].querySelector("input").value;
+        let monto = Number(fila.cells[1].querySelector("input").value) || 0;
 
-        doc.text(concepto + " - $" + monto, 10, y);
-        y += 10;
+        totalPDF += monto;
+
+        doc.text(concepto, 15, y);
+        doc.text("$" + monto.toFixed(2), 160, y);
+
+        y += 8;
     });
 
-    doc.text("Total: $" + total, 10, y + 10);
+    // ================= TOTAL =================
+    y += 5;
+    doc.setFont(undefined, "bold");
+    doc.text("TOTAL", 15, y);
+    doc.text("$" + totalPDF.toFixed(2), 160, y);
 
-    // Firma
+    // ================= FIRMA =================
     let firma = new Image();
     firma.src = "firma.png";
 
     try {
-        doc.addImage(firma, "PNG", 125, y + 25, 40, 30);
+        doc.addImage(firma, "PNG", 125, y + 20, 40, 30);
     } catch {}
 
     doc.text("DIRECTOR", 125, y + 55);
 
-    // Texto legal
     doc.text("Este comprobante no sustituye la factura física.", 10, y + 70);
 
     return doc;
 }
 
-// Vista previa (SIEMPRE FUNCIONA)
+// ===================== VISTA =====================
 function verPDF() {
     let doc = crearPDF();
     let blob = doc.output("blob");
@@ -243,7 +232,7 @@ function verPDF() {
     window.open(url);
 }
 
-// Descargar
+// ===================== DESCARGA =====================
 function descargarPDF() {
     let doc = crearPDF();
     doc.save("comprobante.pdf");
