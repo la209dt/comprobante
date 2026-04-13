@@ -85,6 +85,7 @@ Fecha: <input type="date" id="fecha">
 
 <script>
 
+// 📅 Fecha automática
 window.onload = () => {
     let hoy = new Date().toISOString().split("T")[0];
     document.getElementById("fecha").value = hoy;
@@ -109,17 +110,17 @@ function calcularTotal() {
     document.getElementById("total").innerText = total;
 }
 
-// 🧠 Separar datos automáticamente
+// 🧠 Parsear datos
 function parsearDatos(texto) {
     let partes = texto.split(" ");
 
-    let licencia = partes.slice(0, 3).join(" ");
-    let fecha1 = partes[3];
-    let fecha2 = partes[4];
-    let nombre = partes[5] + " " + partes[6];
-    let dni = partes[partes.length - 1];
-
-    return { licencia, fecha1, fecha2, nombre, dni };
+    return {
+        licencia: partes.slice(0, 3).join(" "),
+        fecha1: partes[3] || "",
+        fecha2: partes[4] || "",
+        nombre: (partes[5] || "") + " " + (partes[6] || ""),
+        dni: partes[partes.length - 1] || ""
+    };
 }
 
 function fechaFormateada(fechaInput) {
@@ -128,6 +129,7 @@ function fechaFormateada(fechaInput) {
     return "San Carlos Bariloche, " + f.toLocaleDateString('es-AR', opciones);
 }
 
+// 📄 Crear PDF
 async function crearPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -138,7 +140,19 @@ async function crearPDF() {
     let numero = document.getElementById("numero").innerText;
 
     let datosTexto = document.getElementById("datos").value;
-    let datos = parsearDatos(datosTexto);
+
+    let datos;
+    try {
+        datos = parsearDatos(datosTexto);
+    } catch {
+        datos = {
+            licencia: "",
+            fecha1: "",
+            fecha2: "",
+            nombre: datosTexto,
+            dni: ""
+        };
+    }
 
     doc.text("COMPROBANTE DE PAGO", 60, 10);
     doc.text("Nº " + numero, 150, 10);
@@ -165,11 +179,16 @@ async function crearPDF() {
 
     doc.text("Total: $" + total, 10, y + 10);
 
-    let firma = await cargarImagen("firma.png");
-    let sello = await cargarImagen("sello.png");
+    // 👇 Imágenes sin romper
+    try {
+        let firma = await cargarImagen("firma.png");
+        doc.addImage(firma, "PNG", 10, y + 20, 50, 20);
+    } catch {}
 
-    doc.addImage(firma, "PNG", 10, y + 20, 50, 20);
-    doc.addImage(sello, "PNG", 140, y + 20, 40, 40);
+    try {
+        let sello = await cargarImagen("sello.png");
+        doc.addImage(sello, "PNG", 140, y + 20, 40, 40);
+    } catch {}
 
     doc.text("TÉRMINOS Y CONDICIONES", 10, y + 70);
     doc.text("Este comprobante no sustituye la factura física.", 10, y + 80);
@@ -177,19 +196,25 @@ async function crearPDF() {
     return doc;
 }
 
+// 🖼 Cargar imagen
 function cargarImagen(src) {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
         let img = new Image();
         img.src = src;
         img.onload = () => resolve(img);
+        img.onerror = reject;
     });
 }
 
+// 👁 Vista previa
 async function previewPDF() {
     let doc = await crearPDF();
-    document.getElementById("preview").src = doc.output("bloburl");
+    let blob = doc.output("blob");
+    let url = URL.createObjectURL(blob);
+    document.getElementById("preview").src = url;
 }
 
+// ⬇ Descargar
 async function descargarPDF() {
     let doc = await crearPDF();
     doc.save("comprobante.pdf");
