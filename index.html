@@ -177,10 +177,10 @@ function crearPDF() {
 // Vista previa MEJORADA
 function verPDF() {
     let doc = crearPDF();
-    let data = doc.output("datauristring"); // más compatible
-    document.getElementById("preview").src = data;
+    let blob = doc.output("blob");
+    let url = URL.createObjectURL(blob);
+    window.open(url); // 🔥 abre el PDF directamente
 }
-
 // Descargar
 function descargarPDF() {
     let doc = crearPDF();
