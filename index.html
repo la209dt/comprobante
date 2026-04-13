@@ -173,9 +173,12 @@ doc.setTextColor(0, 0, 0);
 
     doc.text("Nº: " + numero, 160, 10);
 
-    doc.text("Fecha: " + fecha, 10, 35);
-    doc.text("Datos: " + datos, 10, 45);
-    doc.rect(10, 32, 190, 20);
+    let margenX = 15;
+
+doc.text("Fecha: " + fecha, margenX, 38);
+doc.text("Datos: " + datos, margenX, 48);
+
+doc.rect(margenX, 32, 180, 22);
 
     let y = 55;
 
