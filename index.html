@@ -61,7 +61,10 @@ iframe {
 <body>
 
 <div class="header">
-    <img src="logo-atfa.png" class="logo">
+    <div style="display:flex; gap:10px;">
+        <img src="logo-atfa.png" class="logo">
+        <img src="logo_bariloche.png" class="logo">
+    </div>
 
     <div class="center">
         <h2 style="margin:0;">COMPROBANTE DE PAGO</h2>
@@ -91,7 +94,15 @@ Fecha: <input type="date" id="fecha"><br>
 <iframe id="preview"></iframe>
 
 <script>
+function cargarImagen(src) {
+    return new Promise((resolve, reject) => {
+        let img = new Image();
+        img.src = src;
 
+        img.onload = () => resolve(img);
+        img.onerror = () => reject();
+    });
+}
 // Inicio limpio
 window.onload = function() {
 
@@ -137,7 +148,7 @@ function calcularTotal() {
 }
 
 // Crear PDF (SIN IMÁGENES para asegurar preview)
-function crearPDF() {
+async function crearPDF() {
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -147,12 +158,25 @@ function crearPDF() {
     let total = document.getElementById("total").innerText;
     let numero = document.getElementById("numero").value;
 
-    // Encabezado seguro
-    doc.text("COMPROBANTE DE PAGO", 60, 10);
-    doc.text("ESCUELA DE TÉCNICOS", 60, 18);
-    doc.text("Bariloche, ATFA 209", 60, 25);
+    // Cargar imágenes
+    let logo1, logo2, firma;
 
-    doc.text("Nº: " + numero, 150, 10);
+    try {
+        logo1 = await cargarImagen("logo-atfa.png");
+        doc.addImage(logo1, "PNG", 10, 5, 30, 15);
+    } catch {}
+
+    try {
+        logo2 = await cargarImagen("logo_bariloche.png");
+        doc.addImage(logo2, "PNG", 45, 5, 30, 15);
+    } catch {}
+
+    // Encabezado
+    doc.text("COMPROBANTE DE PAGO", 80, 10);
+    doc.text("ESCUELA DE TÉCNICOS", 80, 18);
+    doc.text("Bariloche, ATFA 209", 80, 25);
+
+    doc.text("Nº: " + numero, 160, 10);
 
     doc.text("Fecha: " + fecha, 10, 35);
     doc.text("Datos: " + datos, 10, 45);
@@ -170,6 +194,17 @@ function crearPDF() {
     });
 
     doc.text("Total: $" + total, 10, y + 10);
+
+    // FIRMA
+    try {
+        firma = await cargarImagen("firma_cris.png");
+        doc.addImage(firma, "PNG", 130, y + 30, 50, 20);
+    } catch {}
+
+    doc.text("DIRECTOR", 145, y + 55);
+
+    // TEXTO FINAL
+    doc.text("Este comprobante no sustituye la factura física.", 10, y + 70);
 
     return doc;
 }
