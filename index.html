@@ -127,12 +127,28 @@ function eliminarItem(btn) {
 function calcularTotal() {
     let total = 0;
 
-    document.querySelectorAll('#tabla tr').forEach((fila, i) => {
-        if(i === 0) return;
+   // Encabezado
+doc.setFontSize(11);
+doc.text("DESCRIPCIÓN", 15, y);
+doc.text("MONTO", 160, y);
 
-        let monto = fila.cells[1].querySelector("input").value;
-        total += Number(monto) || 0;
-    });
+y += 5;
+doc.line(15, y, 195, y);
+
+y += 5;
+
+// Items
+document.querySelectorAll("#tabla tr").forEach((fila, i) => {
+    if(i === 0) return;
+
+    let concepto = fila.cells[0].querySelector("input").value;
+    let monto = fila.cells[1].querySelector("input").value;
+
+    doc.text(concepto, 15, y);
+    doc.text("$" + monto, 160, y);
+
+    y += 8;
+});
 
     document.getElementById("total").innerText = total;
 }
