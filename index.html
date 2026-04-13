@@ -7,20 +7,38 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body { font-family: Arial; padding: 20px; max-width: 800px; margin: auto; }
+body {
+    font-family: Arial;
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+}
 
 .header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
 }
 
-input { margin: 5px; padding: 5px; }
+.logo {
+    height: 70px;
+}
+
+.center {
+    text-align: center;
+    flex: 1;
+}
+
+input {
+    margin: 5px;
+    padding: 5px;
+    width: 100%;
+}
 
 table {
-    margin-top: 10px;
-    border-collapse: collapse;
     width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
 }
 
 td, th {
@@ -41,18 +59,18 @@ iframe {
 <div class="header">
     <img src="logo-atfa.png" class="logo">
 
-    <div style="text-align:center; flex:1;">
+    <div class="center">
         <h2 style="margin:0;">COMPROBANTE DE PAGO</h2>
         <div>ESCUELA DE TÉCNICOS</div>
         <div>Bariloche, ATFA 209</div>
     </div>
 
     <div>
-        Nº <input id="numero" style="width:100px;">
+        Nº <input id="numero" style="width:80px;">
     </div>
 </div>
 
-Datos: <input id="nombre"><br>
+Datos: <input id="datos"><br>
 Fecha: <input type="date" id="fecha"><br>
 
 <table id="tabla">
@@ -70,7 +88,7 @@ Fecha: <input type="date" id="fecha"><br>
 
 <script>
 
-// 🔢 Número automático editable
+// Inicio
 window.onload = function() {
 
     let hoy = new Date().toISOString().split("T")[0];
@@ -79,15 +97,14 @@ window.onload = function() {
     let num = localStorage.getItem("num") || 1;
     document.getElementById("numero").value = String(num).padStart(5,"0");
 
-    // recuperar items guardados
     let items = JSON.parse(localStorage.getItem("items") || "[]");
 
     items.forEach(item => agregarItem(item.concepto, item.monto));
 };
 
+// Agregar ítems
 function agregarItem(concepto = "", monto = "") {
-    let tabla = document.getElementById("tabla");
-    let row = tabla.insertRow();
+    let row = document.getElementById("tabla").insertRow();
 
     row.innerHTML = `
         <td><input value="${concepto}"></td>
@@ -95,6 +112,7 @@ function agregarItem(concepto = "", monto = "") {
     `;
 }
 
+// Total
 function calcularTotal() {
     let total = 0;
 
@@ -108,21 +126,35 @@ function calcularTotal() {
     document.getElementById("total").innerText = total;
 }
 
+// Cargar imagen seguro
+function cargarImagen(src) {
+    return new Promise((resolve, reject) => {
+        let img = new Image();
+        img.src = src;
+
+        img.onload = () => resolve(img);
+        img.onerror = () => reject();
+    });
+}
+
+// Crear PDF
 async function crearPDF() {
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    let nombre = document.getElementById("nombre").value;
+    let datos = document.getElementById("datos").value;
     let fecha = document.getElementById("fecha").value;
     let total = document.getElementById("total").innerText;
     let numero = document.getElementById("numero").value;
 
-    // 🖼 Cargar logo BIEN
-    let logo = await cargarImagen("logo-atfa.png");
+    // Logo (no rompe si falla)
+    try {
+        let logo = await cargarImagen("logo-atfa.png");
+        doc.addImage(logo, "PNG", 10, 5, 40, 20);
+    } catch {}
 
-    doc.addImage(logo, "PNG", 10, 5, 40, 20);
-
-    // 🧾 Encabezado
+    // Encabezado
     doc.text("COMPROBANTE DE PAGO", 60, 10);
     doc.text("ESCUELA DE TÉCNICOS", 60, 18);
     doc.text("Bariloche, ATFA 209", 60, 25);
@@ -130,10 +162,9 @@ async function crearPDF() {
     doc.text("Nº: " + numero, 150, 10);
 
     doc.text("Fecha: " + fecha, 10, 35);
-    doc.text("Datos: " + nombre, 10, 45);
+    doc.text("Datos: " + datos, 10, 45);
 
     let y = 55;
-
     let items = [];
 
     document.querySelectorAll("#tabla tr").forEach((fila, i) => {
@@ -155,32 +186,23 @@ async function crearPDF() {
     return doc;
 }
 
-// 👁 Vista previa
-function verPDF() {
-    let doc = crearPDF();
+// Vista previa
+async function verPDF() {
+    let doc = await crearPDF();
     let blob = doc.output("blob");
     let url = URL.createObjectURL(blob);
     document.getElementById("preview").src = url;
 }
 
-// ⬇ Descargar
-function descargarPDF() {
-    let doc = crearPDF();
+// Descargar
+async function descargarPDF() {
+    let doc = await crearPDF();
     doc.save("comprobante.pdf");
 
     let num = Number(localStorage.getItem("num") || 1);
     localStorage.setItem("num", num + 1);
 }
-function cargarImagen(src) {
-    return new Promise((resolve, reject) => {
-        let img = new Image();
-        img.crossOrigin = "anonymous";
-        img.src = src;
 
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-    });
-}
 </script>
 
 </body>
