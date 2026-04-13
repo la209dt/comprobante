@@ -26,7 +26,7 @@ body {
 }
 
 .logo {
-    height: 60px;
+    height: 70px;
 }
 
 .center {
@@ -53,12 +53,6 @@ td, th {
 
 button {
     margin: 5px;
-}
-
-iframe {
-    margin-top: 20px;
-    width: 100%;
-    height: 400px;
 }
 </style>
 </head>
@@ -96,8 +90,6 @@ Fecha: <input type="date" id="fecha"><br>
 
 <button onclick="verPDF()">Ver PDF</button>
 <button onclick="descargarPDF()">Descargar PDF</button>
-
-<iframe id="preview"></iframe>
 
 <script>
 
@@ -144,7 +136,7 @@ function calcularTotal() {
     document.getElementById("total").innerText = total;
 }
 
-// Crear PDF (estable)
+// Crear PDF (estable + imágenes)
 function crearPDF() {
 
     const { jsPDF } = window.jspdf;
@@ -155,7 +147,7 @@ function crearPDF() {
     let total = document.getElementById("total").innerText;
     let numero = document.getElementById("numero").value;
 
-    // Logos desde HTML
+    // Logos
     let logo1 = document.querySelector('img[src="logo-atfa.png"]');
     let logo2 = document.querySelector('img[src="logo_bariloche.png"]');
 
@@ -196,17 +188,18 @@ function crearPDF() {
 
     doc.text("DIRECTOR", 145, y + 55);
 
-    // Texto final
+    // Texto legal
     doc.text("Este comprobante no sustituye la factura física.", 10, y + 70);
 
     return doc;
 }
 
-// Vista previa (100% compatible)
+// Vista previa (SIEMPRE FUNCIONA)
 function verPDF() {
     let doc = crearPDF();
-    let data = doc.output("datauristring");
-    document.getElementById("preview").src = data;
+    let blob = doc.output("blob");
+    let url = URL.createObjectURL(blob);
+    window.open(url);
 }
 
 // Descargar
