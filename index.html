@@ -27,6 +27,7 @@ body {
 
 .logo {
     height: 70px;
+    width: auto;
 }
 
 .center {
@@ -151,8 +152,8 @@ function crearPDF() {
     let logo1 = document.querySelector('img[src="logo-atfa.png"]');
     let logo2 = document.querySelector('img[src="logo_bariloche.png"]');
 
-    try { doc.addImage(logo1, "PNG", 10, 5, 30, 15); } catch {}
-    try { doc.addImage(logo2, "PNG", 45, 5, 30, 15); } catch {}
+    try { doc.addImage(logo1, "PNG", 10, 5, 40, 15); } catch {}
+    try { doc.addImage(logo2, "PNG", 55, 2, 20, 20); } catch {}
 
     // Encabezado
     doc.text("COMPROBANTE DE PAGO", 80, 10);
@@ -183,7 +184,7 @@ function crearPDF() {
     firma.src = "firma.png";
 
     try {
-        doc.addImage(firma, "PNG", 130, y + 30, 50, 20);
+        doc.addImage(firma, "PNG", 125, y + 25, 40, 25);
     } catch {}
 
     doc.text("DIRECTOR", 145, y + 55);
