@@ -132,6 +132,7 @@ doc.setFontSize(11);
 doc.text("DESCRIPCIÓN", 15, y);
 doc.text("MONTO", 160, y);
 
+let tablaInicioY = y;
 y += 5;
 doc.line(15, y, 195, y);
 
@@ -149,6 +150,8 @@ document.querySelectorAll("#tabla tr").forEach((fila, i) => {
 
     y += 8;
 });
+// Caja de la tabla
+doc.rect(15, tablaInicioY - 5, 180, y - tablaInicioY + 5);
 
     document.getElementById("total").innerText = total;
 }
