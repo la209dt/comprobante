@@ -157,7 +157,7 @@ function crearPDF() {
     let logo2 = document.querySelector('img[src="logo_bariloche.png"]');
 
     try { doc.addImage(logo1, "PNG", 10, 5, 40, 25); } catch {}
-    try { doc.addImage(logo2, "PNG", 55, 2, 20, 20); } catch {}
+    try { doc.addImage(logo2, "PNG", 55, 6, 20, 20); } catch {}
 
     // ================= ENCABEZADO =================
     doc.setFontSize(14);
