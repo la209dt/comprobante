@@ -20,8 +20,13 @@ body {
     justify-content: space-between;
 }
 
+.logos {
+    display: flex;
+    gap: 10px;
+}
+
 .logo {
-    height: 70px;
+    height: 60px;
 }
 
 .center {
@@ -61,7 +66,8 @@ iframe {
 <body>
 
 <div class="header">
-    <div style="display:flex; gap:10px;">
+
+    <div class="logos">
         <img src="logo-atfa.png" class="logo">
         <img src="logo_bariloche.png" class="logo">
     </div>
@@ -94,15 +100,7 @@ Fecha: <input type="date" id="fecha"><br>
 <iframe id="preview"></iframe>
 
 <script>
-function cargarImagen(src) {
-    return new Promise((resolve, reject) => {
-        let img = new Image();
-        img.src = src;
 
-        img.onload = () => resolve(img);
-        img.onerror = () => reject();
-    });
-}
 // Inicio limpio
 window.onload = function() {
 
@@ -112,7 +110,7 @@ window.onload = function() {
     let num = localStorage.getItem("num") || 1;
     document.getElementById("numero").value = String(num).padStart(5,"0");
 
-    agregarItem(); // SOLO 1 ITEM INICIAL
+    agregarItem();
 };
 
 // Agregar ítem
@@ -128,8 +126,7 @@ function agregarItem(concepto = "", monto = "") {
 
 // Eliminar ítem
 function eliminarItem(btn) {
-    let row = btn.parentNode.parentNode;
-    row.remove();
+    btn.parentNode.parentNode.remove();
     calcularTotal();
 }
 
@@ -147,8 +144,8 @@ function calcularTotal() {
     document.getElementById("total").innerText = total;
 }
 
-// Crear PDF (SIN IMÁGENES para asegurar preview)
-async function crearPDF() {
+// Crear PDF (estable)
+function crearPDF() {
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -158,18 +155,12 @@ async function crearPDF() {
     let total = document.getElementById("total").innerText;
     let numero = document.getElementById("numero").value;
 
-    // Cargar imágenes
-    let logo1, logo2, firma;
+    // Logos desde HTML
+    let logo1 = document.querySelector('img[src="logo-atfa.png"]');
+    let logo2 = document.querySelector('img[src="logo_bariloche.png"]');
 
-    try {
-        logo1 = await cargarImagen("logo-atfa.png");
-        doc.addImage(logo1, "PNG", 10, 5, 30, 15);
-    } catch {}
-
-    try {
-        logo2 = await cargarImagen("logo_bariloche.png");
-        doc.addImage(logo2, "PNG", 45, 5, 30, 15);
-    } catch {}
+    try { doc.addImage(logo1, "PNG", 10, 5, 30, 15); } catch {}
+    try { doc.addImage(logo2, "PNG", 45, 5, 30, 15); } catch {}
 
     // Encabezado
     doc.text("COMPROBANTE DE PAGO", 80, 10);
@@ -195,27 +186,29 @@ async function crearPDF() {
 
     doc.text("Total: $" + total, 10, y + 10);
 
-    // FIRMA
+    // Firma
+    let firma = new Image();
+    firma.src = "firma.png";
+
     try {
-        firma = await cargarImagen("firma_cris.png");
         doc.addImage(firma, "PNG", 130, y + 30, 50, 20);
     } catch {}
 
     doc.text("DIRECTOR", 145, y + 55);
 
-    // TEXTO FINAL
+    // Texto final
     doc.text("Este comprobante no sustituye la factura física.", 10, y + 70);
 
     return doc;
 }
 
-// Vista previa MEJORADA
+// Vista previa (100% compatible)
 function verPDF() {
     let doc = crearPDF();
-    let blob = doc.output("blob");
-    let url = URL.createObjectURL(blob);
-    window.open(url); // 🔥 abre el PDF directamente
+    let data = doc.output("datauristring");
+    document.getElementById("preview").src = data;
 }
+
 // Descargar
 function descargarPDF() {
     let doc = crearPDF();
