@@ -46,6 +46,10 @@ td, th {
     padding: 5px;
 }
 
+button {
+    margin: 5px;
+}
+
 iframe {
     margin-top: 20px;
     width: 100%;
@@ -74,7 +78,7 @@ Datos: <input id="datos"><br>
 Fecha: <input type="date" id="fecha"><br>
 
 <table id="tabla">
-<tr><th>Concepto</th><th>Monto</th></tr>
+<tr><th>Concepto</th><th>Monto</th><th></th></tr>
 </table>
 
 <button onclick="agregarItem()">Agregar ítem</button>
@@ -88,7 +92,7 @@ Fecha: <input type="date" id="fecha"><br>
 
 <script>
 
-// Inicio
+// Inicio limpio
 window.onload = function() {
 
     let hoy = new Date().toISOString().split("T")[0];
@@ -97,19 +101,25 @@ window.onload = function() {
     let num = localStorage.getItem("num") || 1;
     document.getElementById("numero").value = String(num).padStart(5,"0");
 
-    let items = JSON.parse(localStorage.getItem("items") || "[]");
-
-    items.forEach(item => agregarItem(item.concepto, item.monto));
+    agregarItem(); // SOLO 1 ITEM INICIAL
 };
 
-// Agregar ítems
+// Agregar ítem
 function agregarItem(concepto = "", monto = "") {
     let row = document.getElementById("tabla").insertRow();
 
     row.innerHTML = `
         <td><input value="${concepto}"></td>
         <td><input type="number" value="${monto}" oninput="calcularTotal()"></td>
+        <td><button onclick="eliminarItem(this)">X</button></td>
     `;
+}
+
+// Eliminar ítem
+function eliminarItem(btn) {
+    let row = btn.parentNode.parentNode;
+    row.remove();
+    calcularTotal();
 }
 
 // Total
@@ -126,19 +136,8 @@ function calcularTotal() {
     document.getElementById("total").innerText = total;
 }
 
-// Cargar imagen seguro
-function cargarImagen(src) {
-    return new Promise((resolve, reject) => {
-        let img = new Image();
-        img.src = src;
-
-        img.onload = () => resolve(img);
-        img.onerror = () => reject();
-    });
-}
-
-// Crear PDF
-async function crearPDF() {
+// Crear PDF (SIN IMÁGENES para asegurar preview)
+function crearPDF() {
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -148,13 +147,7 @@ async function crearPDF() {
     let total = document.getElementById("total").innerText;
     let numero = document.getElementById("numero").value;
 
-    // Logo (no rompe si falla)
-    try {
-        let logo = await cargarImagen("logo-atfa.png");
-        doc.addImage(logo, "PNG", 10, 5, 40, 20);
-    } catch {}
-
-    // Encabezado
+    // Encabezado seguro
     doc.text("COMPROBANTE DE PAGO", 60, 10);
     doc.text("ESCUELA DE TÉCNICOS", 60, 18);
     doc.text("Bariloche, ATFA 209", 60, 25);
@@ -165,7 +158,6 @@ async function crearPDF() {
     doc.text("Datos: " + datos, 10, 45);
 
     let y = 55;
-    let items = [];
 
     document.querySelectorAll("#tabla tr").forEach((fila, i) => {
         if(i === 0) return;
@@ -173,30 +165,25 @@ async function crearPDF() {
         let concepto = fila.cells[0].querySelector("input").value;
         let monto = fila.cells[1].querySelector("input").value;
 
-        items.push({concepto, monto});
-
         doc.text(concepto + " - $" + monto, 10, y);
         y += 10;
     });
-
-    localStorage.setItem("items", JSON.stringify(items));
 
     doc.text("Total: $" + total, 10, y + 10);
 
     return doc;
 }
 
-// Vista previa
-async function verPDF() {
-    let doc = await crearPDF();
-    let blob = doc.output("blob");
-    let url = URL.createObjectURL(blob);
-    document.getElementById("preview").src = url;
+// Vista previa MEJORADA
+function verPDF() {
+    let doc = crearPDF();
+    let data = doc.output("datauristring"); // más compatible
+    document.getElementById("preview").src = data;
 }
 
 // Descargar
-async function descargarPDF() {
-    let doc = await crearPDF();
+function descargarPDF() {
+    let doc = crearPDF();
     doc.save("comprobante.pdf");
 
     let num = Number(localStorage.getItem("num") || 1);
