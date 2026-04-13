@@ -150,7 +150,10 @@ doc.setLineWidth(1);
 doc.line(15, 30, 195, 30);
 
     let datos = document.getElementById("datos").value;
-    let fecha = document.getElementById("fecha").value;
+    let fechaInput = document.getElementById("fecha").value;
+let partes = fechaInput.split("-");
+
+let fecha = partes[2] + "/" + partes[1] + "/" + partes[0];
     let total = document.getElementById("total").innerText;
     let numero = document.getElementById("numero").value;
 
