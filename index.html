@@ -188,15 +188,30 @@ doc.text("Datos: " + datos, margenX + 2, cajaY + 15);
 
     let y = 55;
 
-    document.querySelectorAll("#tabla tr").forEach((fila, i) => {
-        if(i === 0) return;
+    // Encabezado de tabla
+doc.setFontSize(11);
+doc.text("DESCRIPCIÓN", 15, y);
+doc.text("MONTO", 160, y);
 
-        let concepto = fila.cells[0].querySelector("input").value;
-        let monto = fila.cells[1].querySelector("input").value;
+y += 5;
 
-        doc.text(concepto + " - $" + monto, 10, y);
-        y += 10;
-    });
+// Línea debajo del encabezado
+doc.line(15, y, 195, y);
+
+y += 5;
+
+// Items
+document.querySelectorAll("#tabla tr").forEach((fila, i) => {
+    if(i === 0) return;
+
+    let concepto = fila.cells[0].querySelector("input").value;
+    let monto = fila.cells[1].querySelector("input").value;
+
+    doc.text(concepto, 15, y);
+    doc.text("$" + monto, 160, y);
+
+    y += 8;
+});
 
     doc.text("Total: $" + total, 10, y + 10);
 
