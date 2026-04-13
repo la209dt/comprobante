@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Boleta Electrónica</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+body { font-family: Arial; padding: 20px; }
+input { margin: 5px; }
+table { margin-top: 10px; border-collapse: collapse; }
+td, th { border: 1px solid black; padding: 5px; }
+</style>
+</head>
+
+<body>
+
+<h2>Boleta Electrónica</h2>
+
+Nombre: <input id="nombre"><br>
+Fecha: <input type="date" id="fecha"><br>
+
+<h3>Items</h3>
+<table id="tabla">
+<tr><th>Concepto</th><th>Monto</th></tr>
+</table>
+
+<button onclick="agregarItem()">Agregar ítem</button>
+
+<h3>Total: <span id="total">0</span></h3>
+
+<button onclick="generarPDF()">Descargar PDF</button>
+
+<script>
+
+function agregarItem() {
+    let tabla = document.getElementById("tabla");
+    let row = tabla.insertRow();
+
+    let celda1 = row.insertCell(0);
+    let celda2 = row.insertCell(1);
+
+    celda1.innerHTML = '<input oninput="calcularTotal()">';
+    celda2.innerHTML = '<input type="number" oninput="calcularTotal()">';
+}
+
+function calcularTotal() {
+    let total = 0;
+    let inputs = document.querySelectorAll('input[type="number"]');
+
+    inputs.forEach(i => {
+        total += Number(i.value) || 0;
+    });
+
+    document.getElementById("total").innerText = total;
+}
+
+function generarPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    let nombre = document.getElementById("nombre").value;
+    let fecha = document.getElementById("fecha").value;
+    let total = document.getElementById("total").innerText;
+
+    doc.text("Boleta Electrónica", 10, 10);
+    doc.text("Nombre: " + nombre, 10, 20);
+    doc.text("Fecha: " + fecha, 10, 30);
+    doc.text("Total: " + total, 10, 40);
+
+    doc.save("boleta.pdf");
+}
+
+</script>
+
+</body>
+</html>
