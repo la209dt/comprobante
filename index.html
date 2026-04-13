@@ -108,7 +108,7 @@ function calcularTotal() {
     document.getElementById("total").innerText = total;
 }
 
-function crearPDF() {
+async function crearPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
@@ -117,13 +117,22 @@ function crearPDF() {
     let total = document.getElementById("total").innerText;
     let numero = document.getElementById("numero").value;
 
-    doc.text("COMPROBANTE", 70, 10);
+    // 🖼 Cargar logo BIEN
+    let logo = await cargarImagen("logo-atfa.png");
+
+    doc.addImage(logo, "PNG", 10, 5, 40, 20);
+
+    // 🧾 Encabezado
+    doc.text("COMPROBANTE DE PAGO", 60, 10);
+    doc.text("ESCUELA DE TÉCNICOS", 60, 18);
+    doc.text("Bariloche, ATFA 209", 60, 25);
+
     doc.text("Nº: " + numero, 150, 10);
 
-    doc.text("Fecha: " + fecha, 10, 20);
-    doc.text("Datos: " + nombre, 10, 30);
+    doc.text("Fecha: " + fecha, 10, 35);
+    doc.text("Datos: " + nombre, 10, 45);
 
-    let y = 40;
+    let y = 55;
 
     let items = [];
 
@@ -139,7 +148,6 @@ function crearPDF() {
         y += 10;
     });
 
-    // guardar para próxima boleta
     localStorage.setItem("items", JSON.stringify(items));
 
     doc.text("Total: $" + total, 10, y + 10);
@@ -163,7 +171,16 @@ function descargarPDF() {
     let num = Number(localStorage.getItem("num") || 1);
     localStorage.setItem("num", num + 1);
 }
+function cargarImagen(src) {
+    return new Promise((resolve, reject) => {
+        let img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = src;
 
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+    });
+}
 </script>
 
 </body>
