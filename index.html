@@ -166,8 +166,11 @@ let fecha = partes[2] + "/" + partes[1] + "/" + partes[0];
 
     // Encabezado
     doc.setFontSize(14);
-doc.setTextColor(0, 102, 204);
-doc.text("COMPROBANTE DE PAGO", 70, 12);
+doc.setTextColor(0, 0, 0); // negro
+
+doc.text("COMPROBANTE DE PAGO", 80, 15);
+doc.text("ESCUELA DE TÉCNICOS", 80, 22);
+doc.text("Bariloche, ATFA 209", 80, 28);
 
 doc.setFontSize(10);
 doc.setTextColor(0, 0, 0);
